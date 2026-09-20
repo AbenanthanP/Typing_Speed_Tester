@@ -21,7 +21,10 @@ const PARAGRAPHS = [
   "Libraries have a particular kind of quiet. It is not the silence of an empty room but the hush of many people thinking at once. Pages turn, chairs shift, and somewhere a pencil taps against a notebook. Walking between the shelves you pass a hundred subjects you will never study, and somehow that feels less like a loss than an invitation.",
   "Good software is mostly about deleting things. The first version of any program is full of ideas that seemed clever at the time, and the work of improving it is largely the work of removing them. What remains should read plainly enough that someone else can change it a year later without asking you what you meant.",
   "The train followed the coast for almost an hour. Fields gave way to grey water, then to a long stretch of beach where nobody was walking. Passengers dozed with their bags on their knees while the light flickered between the carriages. Travelling slowly like this makes a country feel larger than any map suggests it could be.",
-  "Learning anything new follows a familiar shape. At first everything is difficult and nothing makes sense, then one day the pieces fit together without you noticing when it happened. The trick is to keep going through the long middle part, where progress is real but too slow to feel. Patience is a skill like any other, and it can be practised."
+  "Learning anything new follows a familiar shape. At first everything is difficult and nothing makes sense, then one day the pieces fit together without you noticing when it happened. The trick is to keep going through the long middle part, where progress is real but too slow to feel. Patience is a skill like any other, and it can be practised.",
+  "Walking through the dense forest, the sound of the city fades away entirely. Only the rustling of leaves and the occasional call of a bird break the silence. There is a profound sense of peace that comes from being surrounded by towering trees that have stood for centuries. Nature has a way of putting our daily worries into perspective, reminding us of the larger world we inhabit.",
+  "Cooking a meal from scratch requires a certain level of patience and focus. Measuring ingredients, chopping vegetables, and watching a pot simmer are small, deliberate actions that demand your full attention. The kitchen becomes a sanctuary where the chaos of the day is temporarily forgotten. In the end, the reward is not just a delicious dish, but the satisfaction of having created something with your own two hands.",
+  "Music has the extraordinary ability to transport us to different times and places. A single melody can evoke memories we thought we had forgotten, bringing back feelings with vivid intensity. Whether it is a classical symphony or an upbeat pop song, rhythms and harmonies resonate with our emotions on a profound level. Listening closely allows us to experience the world through the artist's unique perspective."
 ];
 
 const QUOTES = [
@@ -52,6 +55,9 @@ const MODES = {
 const TIME_LIMIT_KEY = "typingTester.timeLimit";
 const CUSTOM_TEXT_KEY = "typingTester.customText";
 const HIGH_SCORE_KEY = "typingTester.highScores";
+const LAST_RESULT_KEY = "typingTester.lastResult";
+const HISTORY_KEY = "typingTester.history";
+const HISTORY_LIMIT = 20;
 
 /* ---------------------------------------------------------------------- */
 /* Practice UI markup (shared by every page)                              */
@@ -113,18 +119,6 @@ const PRACTICE_TEMPLATE = `
       <span class="focus-note">Click the text above to focus it, then start typing.</span>
     </p>
   </div>
-
-  <div class="result" id="result" hidden aria-live="assertive">
-    <h2>Results</h2>
-    <p class="new-best-badge" id="new-best-badge" hidden>New Best!</p>
-    <div class="result-grid">
-      <div><span id="result-wpm">0</span><small>WPM</small></div>
-      <div><span id="result-accuracy">0%</span><small>Accuracy</small></div>
-      <div><span id="result-errors">0</span><small>Errors</small></div>
-      <div><span id="result-best">0</span><small>Best WPM</small></div>
-    </div>
-    <button id="try-again-btn">Try Again</button>
-  </div>
 `;
 
 /* ---------------------------------------------------------------------- */
@@ -147,7 +141,8 @@ const state = {
   countdownId: null,
   charStatus: [],
   cumulativeCorrect: 0,
-  cumulativeIncorrect: 0
+  cumulativeIncorrect: 0,
+  samples: []
 };
 
 let previousInputValue = "";
@@ -398,6 +393,7 @@ function prepareRound() {
   state.cumulativeCorrect = 0;
   state.cumulativeIncorrect = 0;
   state.charStatus = [];
+  state.samples = [];
 
   const round = buildRoundText();
   state.targetText = round.text;
@@ -406,7 +402,6 @@ function prepareRound() {
   previousInputValue = "";
   dom.textInput.value = "";
   dom.textWrapper.classList.remove("disabled");
-  dom.resultEl.hidden = true;
   dom.countdownOverlay.hidden = true;
 
   renderTargetText();
@@ -438,6 +433,7 @@ function beginRun() {
       state.elapsed++;
     }
     updateLiveStatsUI();
+    recordSample();
     const { wpm, accuracy } = computeLiveStats();
     const clock = state.countDirection === "down"
       ? state.timeLeft + " seconds left"
@@ -468,6 +464,26 @@ function runCountdown() {
   }, 700);
 }
 
+function recordSample() {
+  const second = Math.round(elapsedSeconds());
+  const last = state.samples[state.samples.length - 1];
+  if (second < 1 || (last && last.second === second)) return;
+  const { wpm, errors } = computeLiveStats();
+  state.samples.push({ second, wpm, errors });
+}
+
+function saveRoundResult(result) {
+  writeStored(LAST_RESULT_KEY, JSON.stringify(result));
+  let history = [];
+  try {
+    history = JSON.parse(readStored(HISTORY_KEY)) || [];
+  } catch (err) {
+    history = [];
+  }
+  history.push({ date: result.date, mode: result.mode, wpm: result.wpm, accuracy: result.accuracy });
+  writeStored(HISTORY_KEY, JSON.stringify(history.slice(-HISTORY_LIMIT)));
+}
+
 function endRound() {
   state.gameState = GameState.FINISHED;
   clearInterval(state.timerId);
@@ -475,27 +491,33 @@ function endRound() {
   dom.textWrapper.classList.add("disabled");
   dom.textInput.blur();
 
+  recordSample();
   const { wpm, accuracy, errors } = computeLiveStats();
+  const duration = Math.round(elapsedSeconds() * 10) / 10;
   /* Very short rounds (a one-word custom text, say) can't produce a
      meaningful rate, so they never claim the high score. */
   const scoreCounts = elapsedSeconds() >= 2 && state.charStatus.length >= 10;
-  const isBest = scoreCounts && saveHighScoreIfBetter(state.mode, {
-    wpm,
-    accuracy,
-    date: new Date().toISOString()
-  });
+  const date = new Date().toISOString();
+  const isBest = scoreCounts && saveHighScoreIfBetter(state.mode, { wpm, accuracy, date });
   const best = getHighScore(state.mode);
 
-  dom.resultWpmEl.textContent = wpm;
-  dom.resultAccuracyEl.textContent = accuracy + "%";
-  dom.resultErrorsEl.textContent = errors;
-  dom.resultBestEl.textContent = best ? best.wpm : wpm;
-  dom.newBestBadge.hidden = !isBest;
-  dom.resultEl.hidden = false;
-  updateBestScoreUI();
+  saveRoundResult({
+    date,
+    mode: state.mode,
+    timeLimit: MODES[state.mode].timed ? state.timeLimit : null,
+    wpm,
+    accuracy,
+    errors,
+    correctChars: state.charStatus.filter((s) => s === "correct").length,
+    typedChars: state.charStatus.length,
+    duration,
+    isBest,
+    best: best ? best.wpm : null,
+    samples: state.samples
+  });
 
-  announceStatus(`Test finished. ${wpm} words per minute, ${accuracy}% accuracy, ${errors} errors.`
-    + (isBest ? " New best score!" : ""));
+  announceStatus(`Test finished. ${wpm} words per minute, ${accuracy}% accuracy. Opening your results.`);
+  window.location.href = "results.html";
 }
 
 /* ---------------------------------------------------------------------- */
@@ -574,10 +596,6 @@ function initEventListeners() {
     prepareRound();
     dom.textInput.focus();
   });
-  dom.tryAgainBtn.addEventListener("click", () => {
-    prepareRound();
-    dom.textInput.focus();
-  });
 
   const resetBtn = document.getElementById("reset-scores-btn");
   if (resetBtn) {
@@ -619,14 +637,6 @@ function cacheDom() {
   dom.textInput = document.getElementById("text-input");
   dom.countdownOverlay = document.getElementById("countdown-overlay");
   dom.countdownNumber = document.getElementById("countdown-number");
-
-  dom.resultEl = document.getElementById("result");
-  dom.newBestBadge = document.getElementById("new-best-badge");
-  dom.resultWpmEl = document.getElementById("result-wpm");
-  dom.resultAccuracyEl = document.getElementById("result-accuracy");
-  dom.resultErrorsEl = document.getElementById("result-errors");
-  dom.resultBestEl = document.getElementById("result-best");
-  dom.tryAgainBtn = document.getElementById("try-again-btn");
 }
 
 function init() {
