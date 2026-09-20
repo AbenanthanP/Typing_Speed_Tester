@@ -1,17 +1,57 @@
+/* ======================================================================
+   Typing Speed Tester - stylesheet
+   Student project: plain CSS only, no frameworks.
+
+   Sections:
+   1. Design tokens (colours, fonts, spacing)
+   2. Base + helpers
+   3. Header and navigation
+   4. Mode panel (description + controls)
+   5. Custom text box
+   6. Live stats
+   7. Typing area
+   8. Results page
+   9. Footer
+   10. Responsive + reduced motion
+   ====================================================================== */
+
+/* ---------- 1. Design tokens ------------------------------------------ */
+
 :root {
-  --bg: #10151c;
-  --surface: #171f29;
-  --surface-raised: #1e2733;
-  --border: #263140;
-  --text: #e3e8ef;
-  --muted: #8996a8;
-  --accent: #4fd1a5;
-  --accent-strong: #38b98c;
-  --error: #f16565;
-  --correct: #4fd1a5;
-  --caret: #4fa8f1;
+  /* Colours. The chart script reads --accent, --error, --muted, --border
+     and --surface-raised, so those five must stay plain hex values. */
+  --bg: #0f172a;
+  --surface: #16202f;
+  --surface-raised: #1e293b;
+  --border: #24324a;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --accent: #22c55e;
+  --accent-strong: #16a34a;
+  --accent-soft: rgba(34, 197, 94, 0.12);
+  --on-accent: #052e16;
+  --error: #f87171;
+  --highlight: #f59e0b;
   --focus-ring: #7cc7ff;
+
+  /* Fonts */
+  --font-heading: "Lexend", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Consolas", "Courier New", monospace;
+
+  /* Spacing steps (multiples of 8px) */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --page-width: 860px;
 }
+
+/* ---------- 2. Base + helpers ---------------------------------------- */
 
 * {
   box-sizing: border-box;
@@ -22,13 +62,22 @@ body {
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
-  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2.5rem 1.25rem 3rem;
+  padding: var(--space-4) var(--space-2) var(--space-4);
 }
 
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* Hidden from the screen but still read by screen readers. */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -49,15 +98,36 @@ textarea:focus-visible,
   outline-offset: 2px;
 }
 
+main {
+  width: 100%;
+  max-width: var(--page-width);
+}
+
+/* ---------- 3. Header and navigation --------------------------------- */
+
 header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: var(--space-3);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  color: var(--accent);
+  flex-shrink: 0;
 }
 
 header h1 {
-  margin: 0 0 0.4rem;
-  font-size: 2rem;
-  letter-spacing: -0.02em;
+  margin: 0;
+  font-size: clamp(1.6rem, 5vw, 2.25rem);
+  font-weight: 700;
 }
 
 .subtitle {
@@ -66,81 +136,78 @@ header h1 {
   font-size: 0.95rem;
 }
 
-main {
-  width: 100%;
-  max-width: 820px;
-}
-
+/* Navigation is a row of pills so the current page is obvious. */
 .tabs {
   display: flex;
-  gap: 0.25rem;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 1.25rem;
+  gap: 0.3rem;
   flex-wrap: wrap;
+  justify-content: center;
   width: 100%;
-  max-width: 820px;
+  max-width: var(--page-width);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.35rem;
+  margin-bottom: var(--space-3);
 }
 
 .tab-btn {
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
+  flex: 1 1 auto;
+  text-align: center;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
   color: var(--muted);
-  padding: 0.65rem 1rem;
-  margin-bottom: -1px;
-  font-size: 0.92rem;
-  cursor: pointer;
   text-decoration: none;
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
 }
 
 .tab-btn:hover {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .tab-btn[aria-current="page"] {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 600;
 }
 
+/* ---------- 4. Mode panel -------------------------------------------- */
+
 .mode-panel {
-  animation: panel-in 0.22s ease;
+  animation: panel-in 0.25s ease;
 }
 
 @keyframes panel-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .mode-description {
-  margin: 0 0 1.1rem;
+  margin: 0 0 var(--space-3);
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 1rem;
+  max-width: 62ch;
 }
 
 .panel-controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
   flex-wrap: wrap;
 }
 
 .time-select {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.3rem;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 0.3rem;
   flex-wrap: wrap;
 }
@@ -149,27 +216,29 @@ main {
   background: transparent;
   border: none;
   color: var(--muted);
-  padding: 0.45rem 0.8rem;
+  font-family: inherit;
+  padding: 0.5rem 0.9rem;
   border-radius: 6px;
   font-size: 0.88rem;
+  min-height: 40px;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .time-btn:hover {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .time-btn.active {
-  background: var(--accent);
-  color: #0b1410;
+  background: var(--accent-soft);
+  color: var(--accent);
   font-weight: 600;
 }
 
 .control-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-1);
   flex-wrap: wrap;
 }
 
@@ -178,118 +247,147 @@ main {
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
+  font-family: inherit;
   padding: 0.55rem 1rem;
-  border-radius: 8px;
+  min-height: 40px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.88rem;
-  transition: border-color 0.15s ease, transform 0.1s ease;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 #restart-btn:hover,
 #countdown-btn:hover {
   border-color: var(--accent);
+  background: var(--surface-raised);
 }
 
-#restart-btn:active,
-#countdown-btn:active {
-  transform: scale(0.97);
-}
+/* ---------- 5. Custom text box --------------------------------------- */
 
 .custom-panel {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1rem 1.1rem;
-  margin-bottom: 1.25rem;
+  border-radius: var(--radius);
+  padding: var(--space-2);
+  margin-bottom: var(--space-3);
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
 }
 
 .custom-panel label {
-  font-size: 0.85rem;
-  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .custom-panel textarea {
   width: 100%;
   resize: vertical;
-  min-height: 5rem;
+  min-height: 6rem;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   color: var(--text);
   font-family: inherit;
-  font-size: 0.95rem;
-  padding: 0.65rem 0.75rem;
+  font-size: 1rem;
+  padding: 0.7rem 0.8rem;
+}
+
+.custom-panel textarea:focus {
+  border-color: var(--accent);
 }
 
 .custom-panel button {
   align-self: flex-start;
   background: var(--accent);
   border: none;
-  color: #0b1410;
+  color: var(--on-accent);
+  font-family: inherit;
   font-weight: 600;
-  padding: 0.5rem 1.1rem;
-  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  min-height: 40px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
+  transition: background 0.2s ease;
+}
+
+.custom-panel button:hover {
+  background: var(--accent-strong);
 }
 
 .field-hint {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   color: var(--muted);
-  min-height: 1.1em;
+  min-height: 1.2em;
 }
+
+/* ---------- 6. Live stats -------------------------------------------- */
 
 .stats {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 0.65rem;
-  margin-bottom: 1.5rem;
+  gap: 0.5rem;
+  margin-bottom: var(--space-3);
 }
 
 .stat {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.9rem 0.4rem;
+  border-radius: var(--radius);
+  padding: 0.85rem 0.4rem;
   text-align: center;
+}
+
+/* WPM is the number people care about most, so it gets the accent border. */
+.stat-primary {
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .stat-value {
   display: block;
-  font-size: 1.35rem;
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
   font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-primary .stat-value {
   color: var(--accent);
+  font-size: 1.7rem;
 }
 
 .stat-label {
   display: block;
   font-size: 0.7rem;
   color: var(--muted);
-  margin-top: 0.15rem;
+  margin-top: 0.1rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
+/* ---------- 7. Typing area ------------------------------------------- */
+
 .typing-area {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-3);
 }
 
 .text-wrapper {
   position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.5rem;
+  border-radius: var(--radius);
+  padding: var(--space-3);
   cursor: text;
-  transition: border-color 0.15s ease;
+  box-shadow: var(--shadow);
+  transition: border-color 0.2s ease;
 }
 
 .text-wrapper:focus-within {
-  border-color: var(--caret);
+  border-color: var(--accent);
 }
 
 .text-wrapper.disabled {
@@ -300,13 +398,13 @@ main {
 #text-display {
   position: relative;
   margin: 0;
-  font-family: "Consolas", "Courier New", monospace;
-  font-size: 1.25rem;
-  line-height: 1.9;
-  letter-spacing: 0.02em;
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  line-height: 2;
+  /* Untyped text stays readable (contrast above 4.5:1), typed text turns brighter. */
   color: var(--muted);
   user-select: none;
-  max-height: 11.5rem;
+  max-height: 12rem;
   overflow-y: auto;
   scrollbar-width: thin;
 }
@@ -316,27 +414,34 @@ main {
 }
 
 #text-display .char.correct {
-  color: var(--correct);
+  color: var(--text);
 }
 
 #text-display .char.incorrect {
   color: var(--error);
-  text-decoration: underline;
-  text-decoration-color: var(--error);
+  background: rgba(248, 113, 113, 0.14);
+  border-radius: 2px;
 }
 
+/* The blinking underline acts as the caret. */
 #text-display .char.current {
-  border-bottom: 2px solid var(--caret);
+  border-bottom-color: var(--accent);
+  animation: caret 1s steps(1) infinite;
+}
+
+@keyframes caret {
+  50% { border-bottom-color: transparent; }
 }
 
 .quote-author {
-  margin: 0.75rem 0 0;
+  margin: var(--space-1) 0 0;
   color: var(--muted);
   font-style: italic;
   font-size: 0.9rem;
   text-align: right;
 }
 
+/* The real input is invisible; the styled text above shows progress. */
 #text-input {
   position: absolute;
   opacity: 0;
@@ -350,64 +455,86 @@ main {
 .countdown-overlay {
   position: absolute;
   inset: 0;
-  border-radius: 12px;
-  background: rgba(16, 21, 28, 0.88);
+  border-radius: var(--radius);
+  background: rgba(15, 23, 42, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  padding: 1rem;
 }
 
 .countdown-overlay[hidden] {
   display: none;
 }
 
+.countdown-overlay #countdown-number {
+  font-family: var(--font-heading);
+  font-size: 4rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
 .typing-hint {
   margin: 0.7rem 0 0;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   text-align: center;
-  min-height: 1.2em;
+  min-height: 1.3em;
 }
 
 .typing-hint kbd {
-  font-family: "Consolas", "Courier New", monospace;
+  font-family: var(--font-mono);
   background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 0 0.3rem;
-  font-size: 0.78rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.8rem;
 }
 
+/* Swap the hint depending on whether the typing box has focus. */
 .typing-hint .focus-note {
   display: none;
 }
 
 .text-wrapper:not(:focus-within) ~ .typing-hint .focus-note {
   display: inline;
+  color: var(--highlight);
 }
 
 .text-wrapper:not(:focus-within) ~ .typing-hint .type-note {
   display: none;
 }
 
-.countdown-overlay #countdown-number {
-  font-size: 4rem;
-  font-weight: 800;
-  color: var(--accent);
+/* ---------- 8. Results page ------------------------------------------ */
+
+.results-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-2);
+}
+
+.results-heading h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.6rem;
+}
+
+.results-heading .mode-description {
+  margin: 0;
+  font-size: 0.9rem;
 }
 
 .new-best-badge {
   display: inline-block;
   margin: 0;
-  background: var(--accent);
-  color: #0b1410;
+  background: var(--highlight);
+  color: #1c1204;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  padding: 0.3rem 0.8rem;
+  padding: 0.35rem 0.85rem;
   border-radius: 999px;
 }
 
@@ -415,84 +542,67 @@ main {
   display: none;
 }
 
-/* Results page */
-
-.results-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-}
-
-.results-heading h2 {
-  margin: 0 0 0.3rem;
-  font-size: 1.5rem;
-}
-
-.results-heading .mode-description {
-  margin: 0;
-}
-
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 0.65rem;
-  margin-bottom: 1.25rem;
+  gap: 0.5rem;
+  margin-bottom: var(--space-3);
 }
 
 .summary-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius);
   padding: 0.9rem 0.4rem;
   text-align: center;
 }
 
 .summary-card.highlight {
   border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .summary-value {
   display: block;
+  font-family: var(--font-heading);
   font-size: 1.35rem;
   font-weight: 700;
-  color: var(--accent);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .summary-card.highlight .summary-value {
-  font-size: 1.8rem;
+  color: var(--accent);
+  font-size: 1.9rem;
 }
 
 .chart-card {
-  margin: 0 0 1.25rem;
+  margin: 0 0 var(--space-3);
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1rem 1.1rem 0.75rem;
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-2) 0.75rem;
 }
 
 .chart-card figcaption {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem 1rem;
+  gap: 0.5rem var(--space-2);
   flex-wrap: wrap;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.6rem;
 }
 
 .chart-card h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.05rem;
 }
 
 .chart-legend {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-2);
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
 }
 
 .legend-item {
@@ -508,14 +618,8 @@ main {
   border-radius: 3px;
 }
 
-.swatch-line {
-  background: var(--accent);
-}
-
-.swatch-error {
-  background: var(--error);
-}
-
+.swatch-line { background: var(--accent); }
+.swatch-error { background: var(--error); }
 .swatch-bar {
   background: var(--surface-raised);
   border: 1px solid var(--muted);
@@ -533,19 +637,20 @@ main {
 .result-actions {
   display: flex;
   justify-content: center;
-  gap: 0.75rem;
+  gap: var(--space-1);
   flex-wrap: wrap;
 }
 
 .primary-link {
   display: inline-block;
   background: var(--accent);
-  color: #0b1410;
+  color: var(--on-accent);
   font-weight: 600;
-  padding: 0.65rem 1.6rem;
-  border-radius: 8px;
+  padding: 0.7rem 1.6rem;
+  border-radius: var(--radius-sm);
   text-decoration: none;
   font-size: 0.95rem;
+  transition: background 0.2s ease;
 }
 
 .primary-link:hover {
@@ -556,67 +661,73 @@ main {
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
-  padding: 0.65rem 1.2rem;
-  border-radius: 8px;
+  font-family: inherit;
+  padding: 0.7rem 1.2rem;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.9rem;
+  transition: border-color 0.2s ease;
 }
 
 .secondary-btn:hover {
   border-color: var(--error);
+  color: var(--error);
 }
 
 .empty-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 2.5rem 1.5rem;
+  border-radius: var(--radius);
+  padding: var(--space-4) var(--space-3);
   text-align: center;
 }
 
 .empty-card h2 {
-  margin: 0 0 0.5rem;
+  margin: 0 0 var(--space-1);
 }
 
 .empty-card p {
-  margin: 0 0 1.25rem;
+  margin: 0 0 var(--space-2);
   color: var(--muted);
 }
 
+/* ---------- 9. Footer ------------------------------------------------- */
+
 footer {
-  margin-top: 2.5rem;
+  margin-top: var(--space-4);
   color: var(--muted);
   font-size: 0.85rem;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.3rem;
+}
+
+footer p {
+  margin: 0;
 }
 
 .link-btn {
   background: none;
   border: none;
   color: var(--muted);
+  font-family: inherit;
   text-decoration: underline;
   cursor: pointer;
   font-size: 0.82rem;
-  padding: 0.2rem;
+  padding: 0.3rem;
 }
 
 .link-btn:hover {
   color: var(--error);
 }
 
-@media (max-width: 640px) {
-  .tabs {
-    justify-content: center;
-  }
+/* ---------- 10. Responsive + reduced motion --------------------------- */
 
-  .tab-btn {
-    flex: 1 1 auto;
-    text-align: center;
-    padding: 0.6rem 0.5rem;
+@media (max-width: 720px) {
+  .summary-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .panel-controls {
@@ -628,33 +739,52 @@ footer {
     justify-content: center;
   }
 
-  #restart-btn {
-    width: 100%;
+  .control-actions button {
+    flex: 1 1 auto;
   }
 }
 
-@media (max-width: 500px) {
+@media (max-width: 560px) {
+  body {
+    padding: var(--space-3) var(--space-1) var(--space-3);
+  }
+
   .stats {
     grid-template-columns: repeat(2, 1fr);
   }
 
   #text-display {
     font-size: 1.05rem;
+    line-height: 1.9;
   }
 
   .chart-box {
     height: 220px;
   }
-}
 
-@media (max-width: 720px) {
-  .summary-grid {
-    grid-template-columns: repeat(3, 1fr);
+  .tab-btn {
+    font-size: 0.82rem;
+    padding: 0.5rem 0.6rem;
   }
 }
 
 @media (max-width: 420px) {
   .summary-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Users who prefer less motion get no animations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  #text-display .char.current {
+    border-bottom-color: var(--accent);
   }
 }
