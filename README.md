@@ -2,7 +2,7 @@
 
 A polished, dependency-free typing speed test built with vanilla HTML, CSS, and JavaScript. Practice typing, track your words-per-minute (WPM) and accuracy in real time, and beat your personal best across four typing modes.
 
-## Overview
+## Overview Of Project
 
 Opening the site drops you straight into a full paragraph of natural text — no splash screen and nothing covering the words. Just start typing; the timer begins with your first keystroke, exactly like MonkeyType.
 
