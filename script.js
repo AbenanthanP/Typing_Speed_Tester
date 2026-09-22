@@ -82,7 +82,7 @@ const PRACTICE_TEMPLATE = `
       <span class="stat-value" id="time-left">0</span>
       <span class="stat-label" id="time-label">Seconds Left</span>
     </div>
-    <div class="stat">
+    <div class="stat stat-primary">
       <span class="stat-value" id="wpm">0</span>
       <span class="stat-label">WPM</span>
     </div>

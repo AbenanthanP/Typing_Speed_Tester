@@ -56,6 +56,19 @@ Because it is plain static files, it can be hosted as-is on GitHub Pages — eac
 - **Responsive layout** that reflows the nav, controls, and stat cards down to phone width.
 - Pasting into the typing box is disabled so results stay honest.
 
+## Design
+
+The look is a dark slate theme with a green accent, kept deliberately simple so every rule is ordinary hand-written CSS:
+
+- **Colours** — slate background (`#0f172a`), green for progress and the primary action (`#22c55e`), amber for the "New Best!" badge, red for mistakes. All of them are defined once as CSS variables at the top of [style.css](style.css), so changing the theme means editing a few lines.
+- **Fonts** — Lexend for headings and numbers, Source Sans 3 for body text, and JetBrains Mono for the passage you type (a monospace font keeps the characters from shifting as you go). They load from Google Fonts, with normal system fonts listed as fallbacks.
+- **Hierarchy** — WPM is the number that matters most, so its card is outlined and larger than the others; the passage is the biggest element on the page; supporting text is muted grey.
+- **Details** — the current character has a blinking underline as a caret, navigation is a pill bar showing the current page, buttons and links have hover and focus styles, and all tap targets are at least 40px tall.
+- **Contrast** — every text/background pair was checked against the WCAG AA minimum of 4.5:1 (the lowest is the untyped passage text at 6.4:1).
+- Animations are switched off automatically for anyone who has "reduce motion" turned on.
+
+`style.css` is split into ten numbered sections with comments (tokens, base, header, controls, stats, typing area, results, footer, responsive) so it is easy to find things.
+
 ## How scoring works
 
 - Every keystroke is compared against the expected character at that position **the moment it is typed**, and recorded permanently as correct or incorrect. Corrections do not erase history, so backspacing over a mistake and retyping it still counts the original error — accuracy stays meaningful even with heavy editing.
