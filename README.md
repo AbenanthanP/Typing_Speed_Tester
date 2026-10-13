@@ -1,6 +1,14 @@
 # Typing Speed Tester
 
-A polished, dependency-free typing speed test built with vanilla HTML, CSS, and JavaScript. Practice typing, track your words-per-minute (WPM) and accuracy in real time, and beat your personal best across four typing modes.
+A polished, dependency-free typing speed test built with vanilla HTML, CSS, and JavaScript. Practice typing, track your words-per-minute (WPM) and accuracy in real time, and beat your personal best.
+
+<div align="center">
+  <a href="https://abenanthanp.github.io/Typing_Speed_Tester/" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Live%20Demo-Open%20Site-brightgreen?style=for-the-badge&logo=github" alt="Live Demo" />
+  </a>
+  <br>
+  <strong>Try it live:</strong> <a href="https://abenanthanp.github.io/Typing_Speed_Tester/" target="_blank" rel="noopener noreferrer">Typing Speed Tester</a>
+</div>
 
 ## Overview Of Project
 
@@ -30,11 +38,11 @@ The four modes are useful features within the first module rather than four sepa
 
 ## Browser-local login
 
-`login.html` offers account creation and sign-in. Passwords are stored as salted PBKDF2 hashes in browser storage. The signed-in account is kept for the current tab session, and the app redirects unsigned users to the login page. Practice data is stored under separate keys for each account in the same browser.
+`login.html` offers account creation and sign-in. Passwords are stored as salted PBKDF2 hashes in browser storage. The signed-in account is kept for the current tab session, and the app redirects unsigned visitors to the login page when needed.
 
-This is a **static-site demonstration**, not secure server-side authentication. Anyone with access to this browser's developer tools or storage can alter local accounts and results. Do not use a real password. For production authentication, use a backend and server-managed sessions.
+This is a **static-site demonstration**, not secure server-side authentication. Anyone with access to this browser's developer tools or storage can alter local accounts and results. Do not use a real password or sensitive data in this demo.
 
-As you type, each character is highlighted as correct, incorrect, or "current". Stats (WPM, accuracy, errors, and your best score) update live and are announced to screen readers through an `aria-live` region. When the round ends — time out, or reaching the last character — you are taken to the results page automatically.
+As you type, each character is highlighted as correct, incorrect, or "current". Stats (WPM, accuracy, errors, and your best score) update live and are announced to screen readers through an `aria-live` region.
 
 ## Results page
 
@@ -45,7 +53,7 @@ As you type, each character is highlighted as correct, incorrect, or "current". 
 - **Recent tests** — a bar chart of your last 10 results, with this test highlighted.
 - **Try Again** goes back to the mode you just played; **Clear history** wipes the bar chart's past results.
 
-The charts are drawn with the plain Canvas 2D API (no chart library). They redraw sharply on high-DPI screens and when the window is resized, and each canvas has an `aria-label` describing its data for screen readers. With no finished test yet, the page shows a short message and a link to start one.
+The charts are drawn with the plain Canvas 2D API (no chart library). They redraw sharply on high-DPI screens and when the window is resized, and each canvas has an `aria-label` describing its data for assistive technology.
 
 ## Setup
 
@@ -77,10 +85,10 @@ Because it is plain static files, it can be hosted as-is on GitHub Pages. The ro
 
 The look is a dark slate theme with a green accent, kept deliberately simple so every rule is ordinary hand-written CSS:
 
-- **Colours** — slate background (`#0f172a`), green for progress and the primary action (`#22c55e`), amber for the "New Best!" badge, red for mistakes. All of them are defined once as CSS variables at the top of [style.css](style.css), so changing the theme means editing a few lines.
-- **Fonts** — Lexend for headings and numbers, Source Sans 3 for body text, and JetBrains Mono for the passage you type (a monospace font keeps the characters from shifting as you go). They load from Google Fonts, with normal system fonts listed as fallbacks.
+- **Colours** — slate background (`#0f172a`), green for progress and the primary action (`#22c55e`), amber for the "New Best!" badge, red for mistakes. All of them are defined once as CSS variables.
+- **Fonts** — Lexend for headings and numbers, Source Sans 3 for body text, and JetBrains Mono for the passage you type (a monospace font keeps the characters from shifting as you go). They load from Google Fonts.
 - **Hierarchy** — WPM is the number that matters most, so its card is outlined and larger than the others; the passage is the biggest element on the page; supporting text is muted grey.
-- **Details** — the current character has a blinking underline as a caret, navigation is a pill bar showing the current page, buttons and links have hover and focus styles, and all tap targets are at least 40px tall.
+- **Details** — the current character has a blinking underline as a caret, navigation is a pill bar showing the current page, buttons and links have hover and focus styles, and all tap targets are large.
 - **Contrast** — every text/background pair was checked against the WCAG AA minimum of 4.5:1 (the lowest is the untyped passage text at 6.4:1).
 - Animations are switched off automatically for anyone who has "reduce motion" turned on.
 
@@ -88,10 +96,10 @@ The look is a dark slate theme with a green accent, kept deliberately simple so 
 
 ## How scoring works
 
-- Every keystroke is compared against the expected character at that position **the moment it is typed**, and recorded permanently as correct or incorrect. Corrections do not erase history, so backspacing over a mistake and retyping it still counts the original error — accuracy stays meaningful even with heavy editing.
+- Every keystroke is compared against the expected character at that position **the moment it is typed**, and recorded permanently as correct or incorrect. Corrections do not erase history, so backspaces do not improve your final score.
 - **Accuracy** = cumulative correct keystrokes ÷ total keystrokes recorded.
 - **Errors** = cumulative incorrect keystrokes (including ones you later fixed).
-- **WPM** = (currently-correct characters ÷ 5) ÷ minutes elapsed, using the standard "5 characters = 1 word" convention. Elapsed time comes from a wall-clock timestamp rather than timer ticks, so finishing between ticks still scores accurately. This half of the calculation reads the *current* state of your input, so fixing a mistake is reflected in your progress.
+- **WPM** = (currently-correct characters ÷ 5) ÷ minutes elapsed, using the standard "5 characters = 1 word" convention. Elapsed time comes from a wall-clock timestamp rather than timer ticks, so final WPM stays accurate even if the browser throttles.
 - Rounds shorter than two seconds (or under ten characters) never claim the high score, so a one-word custom text cannot leave behind an unbeatable number.
 
 ## Project structure
@@ -110,11 +118,11 @@ script.js          Text banks, shared practice UI, state machine, scoring, stora
 results.js         Reads the saved result and draws the canvas charts
 ```
 
-Each test page is a thin shell: header, nav, a mode description, and an empty `<div id="practice-root">`. `script.js` reads the mode from `<body data-mode="...">` and injects the shared practice UI (controls, stats, typing area) into that root, so the typing interface lives in exactly one place instead of being copy-pasted across four files.
+Each test page is a thin shell: header, nav, a mode description, and an empty `<div id="practice-root">`. `script.js` reads the mode from `<body data-mode="...">` and injects the shared practice UI.
 
-While a test runs, `script.js` records your WPM and error count once per second. When the test ends it saves the full result and adds a short entry to the last 20 results under the signed-in account's storage keys, then opens `results.html`, where `results.js` reads that data and draws the charts.
+While a test runs, `script.js` records your WPM and error count once per second. When the test ends it saves the full result and adds a short entry to the last 20 results under the signed-in account's storage key.
 
-`script.js` is organized into labelled sections: text data, mode configuration, the shared UI template, state, storage, text generation, rendering, scoring, round lifecycle (idle → countdown → running → finished), event handlers, and init.
+`script.js` is organized into labelled sections: text data, mode configuration, the shared UI template, state, storage, text generation, rendering, scoring, round lifecycle (idle → countdown → run → finished), and cleanup.
 
 ## Future enhancement ideas
 
